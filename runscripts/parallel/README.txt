@@ -1,0 +1,1 @@
+parallel_boot_snowdrop.bxrc - boots Snowdrop OS and redirects the parallel port output to the file LPT1OUT.txt

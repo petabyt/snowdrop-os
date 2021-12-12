@@ -1,0 +1,22 @@
+Snowdrop OS - how to build
+by Sebastian Mihai, http://sebastianmihai.com
+
+
+Requirements for building Snowdrop OS
+-------------------------------------
+Works on:  Windows XP 32bit
+Doesn't work on:  Windows 7 64bit
+
+These tools may work on other Windows versions; just give it a try! However, I think that it is unlikely that they'll work on 64bit versions.
+
+
+How to build Snowdrop OS
+------------------------
+Building the Snowdrop OS is simple - run the "make.bat" file in the project's root directory, and then locate the generated Snowdrop OS disk images inside the "disk" directory.
+
+The following are created:
+- "output" directory - will contain all generated binaries, such as kernel, apps, and boot loader, as well as static files, such as the kernel configuration file
+- "disk" directory - will contain Snowdrop OS disk images, such as the floppy disk image and the CD-ROM image.
+
+Warning: if you have Cygwin installed, the generation of the CD-ROM image may fail (however, the floppy image creation should still succeed). The reason for this is that cygwin1.dll is included with the cdrtools (which create the CD-ROM image from the floppy image) so that it works on systems without Cygwin. The provided cygwin1.dll may conflict with the installed Cygwin.
+

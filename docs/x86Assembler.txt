@@ -1,0 +1,45 @@
+Snowdrop OS x86 assembler documentation
+---------------------------------------
+
+Non-CPU specific symbols: CONST, ORG, TIMES, DB, DW, $, $$
+
+MOV: supports sources: sreg16, reg, imm, mem
+     supports destination: sreg16, reg, mem
+where mem can be [sreg16 : imm16] or [sreg16 : reg16]
+examples: mov ax, word [cs : 1234h];
+          mov cl, byte [ds : si];
+          mov word [ds : si], 1100b;
+          mov al, byte [ss : 500];
+
+All other two-operand opcodes support only sources: reg, imm
+                              support only destinations: reg
+Single operand opcodes support only: reg
+
+Comment example: `"this is a comment";
+
+See file ASMTEST.ASM for an example of a simple Snowdrop OS application.
+
+
+List of supported opcodes
+-------------------------
+
+General data transfer: MOV, XCHG, XLAT, XLATB, CBW, CWD
+
+Logic and arithmetic:  INC, DEC, MUL, IMUL, DIV, IDIV, ADD, OR, ADC, SBB, AND,
+                       SUB, XOR, ROL, ROR, RCL, RCR, SHL, SAL, SHR, SAR
+
+Conditional branching: CMP, TEST, JMP, JO, JNO, JS, JNS, JE, JZ, JNE, JNZ, JB,
+                       JNAE, JC, JNB, JAE, JNC, JBE, JNA, JA, JNBE, JL, JNGE,
+                       JGE, JNL, JLE, JNG, JG, JNLE, JP, JPE, JNP, JPO, JCXZ,
+                       LOOP, LOOPE, LOOPZ, LOOPNE, LOOPNZ
+
+Procedures:            CALL, RET, RETF, IRET, INT, INT3, INTO, LEAVE, RETN
+
+Stack operations:      PUSH, POP, PUSHA, POPA, PUSHF, POPF
+
+String operations:     MOVSB, LODSB, STOSB, CMPSB, SCASB, MOVSW, LODSW, STOSW,
+                       CMPSW, SCASW, REP, REPE, REPNE, REPZ, REPNZ
+
+Flag operations:       CLC, STC, CLI, STI, CLD, STD, CMC, SAHF, LAHF, SALC
+
+Miscellaneous:         IN, OUT, HLT, NOP

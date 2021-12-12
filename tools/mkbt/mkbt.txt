@@ -1,0 +1,193 @@
+MKBT, Make Bootable
+
+   Create  any  boot- floppy/image from any win32 platform with any media
+   size...
+
+   Version 2.0
+
+   Last updated on Jan 7, 2003
+   - What is MKBT? [#what]
+   - Download [#download]
+   - On what platforms can MKBT be run? [#platforms]
+   - What is the command line syntax? [#syntax]
+   - What is so unique about MKBT? [#aboutmkbt]
+   - Are there any other bootsector installers? [#others]
+   - Where can I find the latest version? [#latestversion]
+   - How to build a bootable floppy [#build]
+   - How to build a bootable 2.88MB floppy image file (without the
+   drive) [#build288]
+   - How does MKBT work? (technical) [#howitworks]
+   - Bootsector installation [#install]
+   - Bootsector copy (-c) [#copy]
+   - Change log [#changes]
+   
+> What is MKBT?
+
+   [#what]
+   MKBT  is  used  for  installing  bootsectors.  It  supports  FAT, NTFS
+   [/fixnt4/] and RAW bootsectors.
+   
+> Download
+
+   [#download]
+   To download MKBT use this link: MKBT v2.0
+   
+> On what platforms can MKBT be run?
+
+   [#platforms]
+   MKBT is compiled as a win32 executable and runs on:
+     * Windows 95/98/ME (FAT)
+     * Windows NT4/2000/XP (FAT and NTFS)
+
+> What is the command line syntax?
+
+   [#syntax]
+                                   MKBT usage
+
+ Usage:
+   mkbt [switches] <source> <target>
+
+   <source>  The source file/drive which contains the bootsector to install
+   <target>  The target file/drive to install the bootsector on
+
+   Switches: -v        Verbose mode
+             -c        Copy mode (no install) used for copying the
+                       bootsector(s)
+             -x        Expert mode (do not check drive A or B only)
+                       USE WITH CAUTION!
+             -l=<xxx>  Set Volume Label to <xxx>
+
+   Returns errorlevel 0 when OK, 1 when some error occurred.
+
+   Examples:
+     To install bootsector from file "bootsect.bin" onto drive A:
+     -> mkbt c:\os\dos622\bootsect.bin a:
+
+     To install bootsector from file "bootsect.bin" onto floppy image "288.img"
+     -> mkbt c:\os\dos622\bootsect.bin c:\tmp\288.img
+
+     To copy bootsector from a bootable floppy in drive A: to a file called
+     "bootsect.bin"
+     -> mkbt -c a: c:\os\dos622\bootsect.bin
+
+> What is so unique about MKBT?
+
+   [#aboutmkbt]
+   Unique things about MKBT are:
+     * It  supports  transferring  a  bootsector  to  floppy images. This
+       allows  you  to  create  a  bootable  2.88MB  floppy image without
+       needing  a 2.88MB floppy drive. See How to build a bootable floppy
+       image file [#buildimage]
+     * It is a win32 executable (not Dos)
+
+> Are there any other bootsector installers?
+
+   [#others]
+   Yes,   I've  found  one  other  bootsector  installer,  "bootable.exe"
+   [http://alexfru.chat.ru/programming/bootprog.zip]written  by Alexei A.
+   Frounze  [http://alexfru.chat.ru/eindex.html].  It is a Dos executable
+   and  only supports transferring a bootsector from file to floppy drive
+   (A: or B:).
+   
+> Where can I find the latest version?
+
+   [#latestversion]
+   The latest version can be found on http://www.nu2.nu/mkbt/
+   
+> How to build a bootable floppy
+
+   [#build]
+   You  can  use  any  Dos version, any Dos supported floppy disk size to
+   build  your  bootable  floppy.  For each Dos version you must have the
+   following 4 boot files:
+     * The bootsector in a file called "bootsect.bin"
+       You  can  capture  the  bootsector  to  a  file  using: mkbt -c a:
+       bootsect.bin
+     * IO.SYS (or IBMBIO.COM for Novell Dos)
+     * MSDOS.SYS (or IBMDOS.COM for Novell Dos)
+     * COMMAND.COM
+
+   For  this  example  we  will  use  MS-Windows  98 (version 4.10.1998),
+   therefor we put the files in a folder called "4101998". They must have
+   "normal" attributes (not hidden/system/readonly!).
+   You  can now use makeboot.bat (which is include with the MKBT download
+   zipfile).
+   makeboot.bat  takes one parameter, that is the directory where the Dos
+   bootfiles can be found.
+   Example: makeboot c:\os\4101998
+   or when your in the "c:\os" folder, just makeboot 4101998
+   
+> How to build a bootable 2.88MB floppy image file (without the drive)
+
+   [#build288]
+   Use bfi - Build Floppy Image [/bfi/]. 
+
+> How does MKBT work? (technical)
+
+   [#howitworks]
+   MKBT  copies  parts  of the bootsector. The bootsector, the very first
+   sector of a floppy disk, is 512 bytes long and looks like this:
+                  FAT Boot sector
+   Offset  Length              Meaning
+   0x0    3 bytes   Jump instruction
+   0x3    8 bytes   OEM Name
+   0xB    25 bytes  BIOS parameter block
+   0x24   26 bytes  Extended BIOS parameter block
+   0x3E   448 bytes Bootstrap code
+   0x1FE  2 bytes   End of sector marker
+   The  BIOS  parameter  block and extended BIOS parameter block contains
+   the information:
+    BIOS parameter block for FAT volumes
+   Offset Length          Meaning
+   0xB    2 bytes Bytes per sector
+   0xD    1 byte  Sectors per cluster
+   0x0E   2 bytes Reserved sectors
+   0x10   1 byte  Number of FATs
+   0x11   2 bytes Root entries
+   0x13   2 bytes Small sectors
+   0x15   1 byte  Media type
+   0x16   2 bytes Sectors per FAT
+   0x18   2 bytes Sectors per track
+   0x1A   2 bytes Number of heads
+   0x1C   4 bytes Hidden sectors
+   0x20   4 bytes Large sectors
+    Extended BIOS parameter block for FAT volumes
+   Offset  Length              Meaning
+   0x24   1 byte   Physical disk number
+   0x25   1 byte   Dos: Current head
+                   NT: Dirty flag
+   0x26   1 byte   Signature
+   0x27   4 bytes  Volume serial number
+   0x2B   11 bytes Volume label
+   0x36   8 bytes  Filesystem ID
+   
+> Bootsector installation
+
+   [#install]
+   Below are the steps MKBT takes to install a bootsector:
+   Steps for bootsector installation
+   Step Source sector Buffer 1 Buffer 2 Target sector
+   1. Read source sector in buffer 1
+   2. Read target sector in buffer 2
+   3. Transfer bootsector parts from buffer 1 to buffer 2
+   4. Write buffer 2 to target sector
+   
+> Bootsector copy (-c)
+
+   [#copy]
+   MKBT  v1.3  (and  higher)  copy  bootsector option copies the complete
+   bootsector!
+   (previous  versions  only  copied  those sections that where needed to
+   install it)
+   
+> Change log
+
+   [#changes]
+   Change log for MKBT [changes.txt]
+   _________________________________________________________________
+
+   Do  you  want to use information from this site elsewhere? That is OK,
+   but please read our disclaimer: http://www.nu2.nu/disclaimer/
+   Our license agreement can be found here: http://www.nu2.nu/license/
+   To contact the author look here: http://www.nu2.nu/contact/bart/
+   Copyright (c) 2000-2003 by Bart Lagerweij. All rights reserved.

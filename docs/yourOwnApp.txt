@@ -1,0 +1,13 @@
+Snowdrop OS - Writing your own app
+by Sebastian Mihai, http://sebastianmihai.com
+
+
+Writing your own app targeting Snowdrop OS is very similar to writing a COM program in DOS. The main exception is that you cannot rely on int 21h, which is DOS-specific. 
+
+Take a look at the source code of the "hello" app in src\apps\hello.asm. It is the most bare-bones program which fully respects the Snowdrop OS app contract.
+
+Then take a look at build\assemble.bat to see how to assemble your program using Nasm. The binary has to have a .APP extension in order to be recognized as an app.
+
+You can also decide to have your app run automatically upon booting by specifying its name in the SNOWDROP.CFG kernel configuration file.
+
+If you choose to extend the Snowdrop OS kernel, read extending.txt.

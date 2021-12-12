@@ -1,0 +1,34 @@
+Snowdrop OS - versions
+by Sebastian Mihai, http://sebastianmihai.com
+
+version 1 - initial version, single tasking, shell, aSMtris
+version 2 - PS/2 mouse driver, mouse test apps
+version 3 - simple multi-tasking scheduler, virtual displays
+version 4 - FAT12 driver support for write/delete, file manager, text editor
+version 5 - serial port driver, formatting utilities, file manager copy support
+version 6 - multiplayer snake game (over serial port)
+version 7 - slide show presentation app
+version 8 - "keep memory" task lifetime mode, for custom services
+version 9 - parallel port driver, BMP loading and rendering, software sprites
+version 10 - system timer frequency change
+version 11 - animated sprites, sound driver (internal speaker)
+version 12 - keyboard driver
+version 13 - more sprites functionality, Storks game
+version 14 - better kernel configuration, program arguments, file utilities
+version 15 - 16x2 LCD controller app, text editor fixes
+version 16 - GUI framework
+version 17 - Snowmine (Minesweeper-like game based on the GUI framework)
+version 18 - BASIC interpreter and linker
+version 19 - install to hard disk
+version 20 - BASIC and text editor improvements
+version 21 - integration of BASIC and GUI framework
+version 22 - x86 assembler, multi-disk support, file viewing utilities
+version 23 - x86 debugger
+version 24 - service loading
+version 25 - dynamic memory and data structures, automatic deallocation, binary size reductions
+version 26 - installer improvements, pseudo-mouse driver
+version 27 - kernel and inter-task messaging
+version 28 - GUI higher resolution, draw app, desktop app
+version 29 - data compression, Hangman game
+version 30 - pseudo-mouse driver improvements
+version 31 - runtime libraries (RTL), BASIC interpreter RTL

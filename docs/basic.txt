@@ -1,0 +1,324 @@
+Here is a summarized guide for the Snowdrop OS BASIC interpreter. Like all other Snowdrop OS applications, I wrote it in assembly language.
+This BASIC interpreter opens the door to simple software development from within Snowdrop OS.
+
+There are a few ways to run BASIC programs:
+
+1. Directly from the text editor
+2. Invoking the BASICRUN application from the command line
+3. Creating a standalone application from a source file, using the BASICLNK linker
+
+A few demo BASIC programs (extension .BAS) are included with Snowdrop OS. Instructions end with either semicolons or new lines. Thus, semicolons allow for multiple instructions on a single line.
+
+I've designed Snowdrop OS BASIC mostly starting from Sinclair BASIC, a dialect for an 80s British 8bit computer called ZX Spectrum.
+
+Additionally, I've integrated the GUI framework with BASIC. This allows programs to easily add buttons, checkboxes, etc. and respond to events (clicks, selection/deselection, etc.).
+All GUI framework wire-up, background/sprite state, etc. is abstracted away, greatly simplifying BASIC GUI programs.
+
+
+======
+Labels
+======
+Labels are placed before instructions, "marking" places in the program, to be referenced by GOTO, CALL, etc.
+Example (the label is myLoop):
+
+myLoop: PRINT "Hello"; GOTO myLoop;
+
+See the GUI section below for labels specific to the GUI framework.
+
+========
+Integers
+========
+BASIC integers range from -32,768 and 32,767.
+
+
+========
+Strings
+========
+String literals use double quote delimiters, for example: "Hello, world!"
+
+
+===========
+Expressions
+===========
+Expressions support a maximum of one operator or function. They can take the forms:
+
+<value>
+<value> <operator> <value>
+<operator> <value>
+<function>
+<function> <value>
+<function> <value>, <value>
+<function> <value>, <value>, <value>
+
+where <value> can be literal ("one", "two", 0, 1337), or a variable.
+
+
+==============================
+Arithmetic and logic operators
+==============================
++ integer addition and concatenation between a string and a second value
+- integer subtraction
+* integer multiplication
+/ integer division quotient
+% integer division modulo
+= logical equality
+> numerical greater than
+< numerical less than
+<= numerical less than or equal to
+>= numerical greater than or equal to
+<> numerical different than
+AND logical
+OR logical
+XOR logical
+NOT logical
+BITAND bitwise AND
+BITOR bitwise OR
+BITXOR bitwise XOR
+<x> BITSHIFTL <y> bitwise shift left <x> by <y> places
+<x> BITSHIFTR <y> bitwise shift right <x> by <y> places
+<x> BITROTATEL <y> bitwise rotate left <x> by <y> places
+<x> BITROTATER <y> bitwise rotate right <x> by <y> places
+
+
+=========
+Functions
+=========
+LEN <expression>
+returns the length of the specified string
+
+RND <expression>
+returns a random integer between 0 and <expression>-1, inclusive
+
+KEY <expression>
+returns true when the key with the specified scan code is currently pressed
+
+CHR <expression>
+converts a numeric ASCII value to a string with the character with that ASCII
+
+ASCII <expression>
+returns the numeric ASCII value of the character in a single-character string
+
+VAL <expression>
+returns the number represented by the specified string
+
+BIN <expression>
+returns the numeric value of the binary number specified as a string
+
+SERIALDATAAVAIL
+returns true when serial port data is available for reading with SERIALR
+
+CHARAT <row expression>, <column expression>
+returns a string containing the character at the specified location on screen
+
+SUBSTRING <string expression>, <start expression>, <length expression>
+returns a substring from the specified start, with the specified length
+
+STRINGAT <string expression>, <index expression>
+returns a string containing the one character in the input string at the specified index
+
+
+========
+Keywords
+========
+PRINT <expression>
+writes the textual representation of <expression> to screen
+
+PRINTLN <expression>
+like PRINT, but also moves to a new line after writing
+
+PRINTLN
+moves cursor to a new line
+
+LET <variable> = <expression>
+assigns a value to a variable
+
+GOTO <label>
+moves execution to another point in the program, as specified by the label
+
+REM "comment"
+inserts comments in the program
+
+FOR <variable> = <expression> TO <expression>
+marks the beginning of a loop; each iteration increments counter by one
+
+FOR <variable> = <expression> TO <expression> STEP <expression>
+marks the beginning of a loop; each iteration adds the step value to counter
+
+NEXT <variable>
+jumps to the corresponding FOR instruction, to perform the next loop iteration
+
+IF <expression> THEN <instruction>
+executes the instruction when the expression is true (non-zero)
+
+IF <expression> THEN <instruction1> ELSE <instruction2>
+executes instruction1 when the expression is true (non-zero)
+executes instruction2 when the expression is false (zero)
+
+CALL <label>
+like GOTO, but allows the code to RETURN to right after CALL
+
+RETURN
+returns to right after the last CALL
+
+INPUTS <variable>
+prompts the user to enter a string from the keyboard, assigning it to the variable
+
+INPUTN <variable>
+like INPUTS, but for numbers
+
+AT <row expression>, <col expression>
+moves the cursor to the specified row and column
+
+COLOURS <font expression>, <background expression>
+changes the current colours as specified
+
+PAUSE <expression>
+pauses for the specified number of centiseconds (hundredths of a second)
+
+WAITKEY <variable>
+waits for the user to press a key and assigns its string value to the variable
+
+NOOP
+does absolutely nothing; used to simplify IF statements
+
+BEEP <frequency expression>, <duration expression>
+emits a sounds over the internal speaker, moving immediately to the next instruction
+frequency number is taken from the documentation for int 89h
+duration is given in centiseconds (hundredths of a second)
+
+BEEPW <frequency expression>, <duration expression>
+like BEEP, but pauses program execution for the duration of the sound
+
+STOP
+stops program execution
+
+CLS
+clears screen using the current font and background colours
+
+PARALLELW <register expression>, <value expression>
+writes the specified value to the specified parallel port register
+
+SERIALW <value expression>
+writes the specified value to the serial port
+
+SERIALR <variable>
+blocks until a byte is available from the serial port and reads it into the variable
+if SERIALDATAAVAIL is checked before and found true, SERIALR will read and not block
+
+
+============================================
+GUI-specific keywords, functions, and labels
+============================================
+YIELD
+gives up control; used after the program has finished acting in response to an event
+
+GUIBEGIN <title>
+prepares the GUI framework for usage; must be used before any other GUI instructions
+
+GUIACTIVEELEMENTID
+returns handle of GUI element which caused last event
+
+GUICLEARALL
+deletes all elements and clears the screen
+
+GUIAT <x>, <y>
+moves current location to the specified location
+
+GUIATDELTA <dx>, <dy>
+moves current location by applying the specified delta to the current location
+
+GUIPRINT <expression>
+prints 8x8 pixel ASCII strings at current location
+
+GUIRECTANGLEERASETO <x>, <y>
+erases a rectangular area from the current location to the specified location
+
+GUIBUTTONADD <text>, <x>, <y>
+create button and return its ID
+
+GUIBUTTONDELETE <id>
+deletes a button
+
+GUIBUTTONENABLE <id>
+enables a button
+
+GUIBUTTONDISABLE <id>
+disables a button
+
+GUICHECKBOXADD <text>, <x>, <t>
+create checkbox and return its ID
+
+GUICHECKBOXDELETE <id>
+deletes a checkox
+
+GUICHECKBOXENABLE <id>
+enables a checkbox
+
+GUICHECKBOXDISABLE <id>
+disables a checkbox
+
+GUICHECKBOXISCHECKED <id>
+returns true when the specified checkbox is checked; false otherwise
+
+GUICHECKBOXSETISCHECKED <id>, <is_checked>
+sets whether the specified checkbox is checked
+
+GUISETCURRENTRADIOGROUP <group_id>
+sets current radio group ID, to be used by subsequent GUIRADIO* calls; can be any integer
+
+GUIRADIOADD <text>, <x>, <y>
+create radio button in the current radio group and return its ID
+
+GUIRADIODELETE <id>
+deletes a radio button
+
+GUIRADIOENABLE <id>
+enables a radio button
+
+GUIRADIODISABLE <id>
+disables a radio button
+
+GUIRADIOISSELECTED <id>
+returns true when the specified radio button is selected; false otherwise
+
+GUIRADIOSETISSELECTED <id>, <is_selected>
+sets whether the specified radio button is selected
+
+GUIIMAGEASCIIADD <text>, <x>, <y>
+creates an ASCII-text image from a string and returns its ID
+can be used to display text that changes
+
+GUIIMAGEDELETE <id>
+deletes an image
+
+GUIIMAGEENABLE <id>
+enables an image
+
+GUIIMAGEDISABLE <id>
+disables an image
+
+GUIIMAGEISSELECTED <id>
+returns true when the specified image is selected; false otherwise
+
+GUIIMAGESETISSELECTED <id>, <is_selected>
+sets whether the specified image is selected
+
+GUIIMAGESETSHOWSELECTEDMARK <id>, <is_shown>
+sets whether the selection marker is shown for the specified image
+
+GUIIMAGESETSHOWHOVERMARK <id>, <is_shown>
+sets whether the hover marker is shown for the specified image
+
+GUIIMAGEASCIISETTEXT <id>, <text>
+changes the text of the specified ASCII-text image
+
+When a GUI framework event takes place, the following labels are looked up
+in the program text, and execution jumps to the one appropriate for the event:
+timerTickEvent
+buttonClickEvent
+checkboxChangeEvent
+radioChangeEvent
+imageLeftClickedEvent
+imageRightClickedEvent
+imageSelectedChangeEvent
+Programs must define these if they wish to act when an event takes place.

@@ -1,0 +1,1 @@
+VGAPALET.BMP - an example BMP image which shows all the colours in the default VGA palette. This image can be a good starting point to creating sprites, etc., which don't need to modify the internal default palette of the VGA adapter.

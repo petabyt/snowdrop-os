@@ -1,0 +1,954 @@
+Snowdrop OS - kernel interrupts
+by Sebastian Mihai, http://sebastianmihai.com
+
+
+The Snowdrop OS kernel offers services to be used by applications via the following interrupt handlers. Most of the are not re-entrant.
+
+NOTE: Interrupts 0F0h to 0FFh are reserved for user programs.
+
+------------------------------------------------------------------------------
+int 80h - Print string to screen
+WRITES DIRECTLY TO VIDEO MEMORY. Not suitable for tasks which need to write to
+their own isolated virtual display.
+INPUT:
+    DS:SI - pointer to first character of zero-terminated string
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------    
+int 81h - Load file from FAT12 disk
+The disk from which the OS booted is used.
+INPUT:
+    DS:SI - pointer to 11-byte buffer containing file name in FAT12 format
+            example: for "BEAR.APP", the buffer would contain "BEAR    APP"
+    ES:DI - pointer to where file data will be loaded, rounded up to nearest 512 bytes
+OUTPUT:
+    AL - result (0=success, 1=not found)
+    CX - file size in bytes
+------------------------------------------------------------------------------
+    
+    
+------------------------------------------------------------------------------
+int 82h - Convert string to upper case
+INPUT:
+    DS:SI - pointer to first character of zero-terminated string
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 83h - Clear keyboard buffer
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+    
+
+------------------------------------------------------------------------------
+int 84h - Get system timer ticks count
+The system timer begins ticking as soon as the kernel initializes.
+By default, the system timer ticks approximately 100 times per second.
+INPUT:
+    NONE
+OUTPUT:
+    AX - current system timer ticks count
+------------------------------------------------------------------------------
+    
+    
+------------------------------------------------------------------------------
+int 85h - Cause delay (busy wait)
+By default, the system timer ticks approximately 100 times per second.
+INPUT:
+    CX - number of system timer ticks to delay
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+    
+
+------------------------------------------------------------------------------
+int 86h - Get next random number
+INPUT:
+    NONE
+OUTPUT:
+    AX - next random number
+------------------------------------------------------------------------------
+    
+    
+------------------------------------------------------------------------------
+int 87h - Load FAT12 disk root directory
+The disk from which the OS booted is used.
+Each 32-byte FAT12 directory entry has the following format:
+Bytes   Content
+0-10    File name (8 bytes) with extension (3 bytes)
+11      Attribute - a bitvector. Bit 0: read only. Bit 1: hidden.
+        Bit 2: system file. Bit 3: volume label. Bit 4: subdirectory.
+        Bit 5: archive. Bits 6-7: unused.
+12-21   Reserved (see below)
+22-23   Time (5/6/5 bits, for hour/minutes/doubleseconds)
+24-25   Date (7/4/5 bits, for year-since-1980/month/day)
+26-27   Starting cluster (0 for an empty file)
+28-31   File size in bytes
+INPUT:
+    ES:DI - pointer to where the root directory will be loaded
+OUTPUT:
+    AX - number of 32-byte FAT12 root directory entries loaded
+------------------------------------------------------------------------------
+    
+    
+------------------------------------------------------------------------------
+int 88h - Dump memory to screen
+WRITES DIRECTLY TO VIDEO MEMORY. Not suitable for tasks which need to write to
+their own isolated virtual display.
+INPUT:
+    DS:SI - pointer to first byte to dump
+OUTPUT:
+    CX - number of bytes to dump
+------------------------------------------------------------------------------
+    
+
+------------------------------------------------------------------------------
+int 89h - Play sound on internal speaker
+The sound is sustained until the speaker is muted via int 8Ah
+Frequency number can be obtained from the following table:
+Note  Frequency  Frequency #
+C     130.81     9121
+C#    138.59     8609
+D     146.83     8126
+D#    155.56     7670
+E     164.81     7239
+F     174.61     6833
+F#    185.00     6449
+G     196.00     6087
+G#    207.65     5746
+A     220.00     5423
+A#    233.08     5119
+B     246.94     4831
+Middle C     261.63     4560
+C#    277.18     4304
+D     293.66     4063
+D#    311.13     3834
+E     329.63     3619
+F     349.23     3416
+F#    369.99     3224
+G     391.00     3043
+G#    415.30     2873
+A     440.00     2711
+A#    466.16     2559
+B     493.88     2415
+C     523.25     2280
+C#    554.37     2152
+D     587.33     2031
+D#    622.25     1917
+E     659.26     1809
+F     698.46     1715
+F#    739.99     1612
+G     783.99     1521
+G#    830.61     1436
+A     880.00     1355
+A#    923.33     1292
+B     987.77     1207
+C     1046.50    1140
+INPUT:
+    AX - frequency number of sound to play
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+    
+    
+------------------------------------------------------------------------------
+int 8Ah - Stop internal speaker output
+This interrupt is used to turn off the speaker after a sound played for a desired period of time.
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 8Bh - Mouse event callback
+Receives 3 bytes of raw mouse data upon a mouse event taking place.
+This handler can be overridden by a custom handler for access to raw mouse data. Once overridden, "managed" mode via interrupts 8Fh, 0C0h (see below) become unavailable.
+INPUT:
+    BH - bit 7 - Y overflow
+         bit 6 - X overflow
+         bit 5 - Y sign bit
+         bit 4 - X sign bit
+         bit 3 - unused and indeterminate
+         bit 2 - middle button
+         bit 1 - right button
+         bit 0 - left button
+    DH - X movement (delta X)
+    DL - Y movement (delta Y)
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 8Ch - Poll raw mouse data
+Returns the last-received raw mouse event data.
+INPUT:
+    NONE
+OUTPUT:
+    BH - bit 7 - Y overflow
+         bit 6 - X overflow
+         bit 5 - Y sign bit
+         bit 4 - X sign bit
+         bit 3 - unused and indeterminate
+         bit 2 - middle button
+         bit 1 - right button
+         bit 0 - left button
+    DH - X movement (delta X)
+    DL - Y movement (delta Y)
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 8Dh - Get mouse driver status
+Returns the status of the mouse driver.
+INPUT:
+    NONE
+OUTPUT:
+    AL - 1 when driver is loaded, 0 otherwise
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 8Eh - Print byte
+Prints the value a byte to the screen (hexadecimal).
+WRITES DIRECTLY TO VIDEO MEMORY. Not suitable for tasks which need to write to
+their own isolated virtual display.
+INPUT:
+    AL - byte to print
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 8Fh - Poll mouse manager
+Polls the mouse manager, receiving button status and mouse location in user-specified coordinates. See interrupt 90h below for how those coordinates are specified.
+INPUT:
+    NONE
+OUTPUT:
+    AL - bits 3 to 7 - unused and indeterminate
+         bit 2 - middle button current state
+         bit 1 - right button current state
+         bit 0 - left button current state
+    BX - X position in user coordinates
+    DX - Y position in user coordinates
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 90h - Initialize mouse manager
+After calling this, a consumer program will be able to poll the mouse manager (via interrupt 8Fh above), to get the mouse location and button status.
+INPUT:
+    BX - width of the bounding box within which the mouse cursor will move
+    DX - height of the bounding box within which the mouse cursor will move
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 91h - Allocate memory
+Allocates a memory segment.
+INPUT:
+    NONE
+OUTPUT:
+    AX - 0 when the allocation succeeded
+    BX - segment number of newly allocated segment, when successful
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 92h - Free memory
+Frees a memory segment, making it available for allocation.
+As of version 25, Snowdrop OS kernel automatically frees memory segments
+allocated by applications.
+INPUT:
+    BX - segment to free
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 93h - Scheduler task add
+Adds a task to the scheduler, preparing it for execution.
+INPUT:
+    BX - segment containing the app to be added as a task
+    DS:SI - pointer to string containing serialized parameter data for the 
+            task being created (maximum 256 bytes)
+OUTPUT:
+    AX - task ID of newly added task
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 94h - Scheduler task yield
+Causes the currently running task to yield to another. Used when a running app
+reaches a point in its execution when it's sensible to yield to another app.
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 95h - Scheduler task exit
+Causes the currently running task to exit. Must be called by all apps whose 
+execution has ended.
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 96h - Activate virtual display of task
+Makes the virtual display of the specified task active.
+INPUT:
+    AX - ID of task whose virtual display is to be made active
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 97h - Write string to current task's virtual display
+Suitable for writing to a task's own isolated virtual display, without 
+interfering with the displays of other tasks.
+INPUT:
+    DS:SI - pointer to first character of zero-terminated string
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 98h - Write character to current task's virtual display
+Suitable for writing to a task's own isolated virtual display, without 
+interfering with the displays of other tasks.
+INPUT:
+    DL - ASCII character to write
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 99h - Scheduler task get status
+Returns the status of the specified task.
+INPUT:
+    AX - task ID
+OUTPUT:
+    AX - task status as follows: 0FFFFh = "not present"
+	BX - 1 when this task's virtual display is currently active, 0 otherwise
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 9Ah - Scheduler get current task ID
+Returns the ID of the currently running task.
+INPUT:
+    NONE
+OUTPUT:
+    AX - task ID of currently running task
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 9Bh - Power services
+Allows access to power-related functions
+INPUT:
+    AX - 0=attempts to put the computer in a power off state via APM.
+	     1=attempts to restart the computer
+OUTPUT:
+    AX - when input AX=0, error code as follows:
+             0 = installation check failed
+             1 = real mode connection failed
+             2 = APM driver version 1.2 unsupported
+             3 = state change to "off" failed
+		 when input AX=1, undefined
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 9Ch - Delete file from disk
+Deletes the file with the specified name from the disk.
+Performs no operation if file does not exist.
+INPUT:
+    DS:SI - pointer to zero-terminated file name string in FAT12 format
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 9Dh - Write file to disk
+Writes the file with the specified name and contents to the disk.
+INPUT:
+    DS:SI - pointer to 11-byte buffer containing file name in FAT12 format
+    ES:DI - pointer to file contents buffer (cannot cross 64kb boundaries)
+    CX - size of file content in bytes
+OUTPUT:
+    AX - status as follows:
+        0 = success
+        1 = failure: maximum number of files reached
+        2 = failure: disk full
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 9Eh - Set cursor position
+Sets the position of the cursor in the current task's virtual display.
+INPUT:
+    BH - row
+    BL - column
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 9Fh - Write attribute to display
+Writes attribute byte to the current task's virtual display.
+INPUT:
+    DL - attribute value
+    CX - number of attribute bytes to write
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A0h - Clear screen
+Clears current task's virtual display, moves cursor to top left, and sets 
+attributes to gray text on black background.
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A1h - Get free file slots count
+Returns the number of free file slots on the disk.
+INPUT:
+    NONE
+OUTPUT:
+    CX - number of free file slots
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A2h - Convert 32bit unsigned integer to string
+Adds ASCII 0 terminator at the end of the string.
+INPUT:
+    DX:AX - number to convert, no larger than 655,359,999 (270FFFFFh)
+    DS:SI - pointer to buffer where the result will be stored
+            (must be a minimum of 16 bytes long)
+    BL - formatting option, as follows (for input 834104):
+                0 - no formatting, eg: "000834104"
+                1 - leading spaces, eg: "   834104"
+                2 - leading spaces and commas, eg: "   834,104"
+                3 - no leading spaces, eg: "834104"
+                4 - no leading spaces with commas, eg: "834,104"
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A3h - Get free disk space amount
+Returns the amount of available disk space, in bytes.
+INPUT:
+    NONE
+OUTPUT:
+    DX:AX - amount of available disk space, in bytes
+            (least significant bytes in AX, most significant bytes in DX)
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A4h - Read keyboard input from user
+Reads characters from the keyboard into the specified buffer.
+It reads no more than the specified limit, and adds a terminator character
+of ASCII 0 at the end, once the user presses Enter to finish inputting.
+The specified buffer must have enough room for one more character than the
+specified count.
+Echoes typed characters to the current task's virtual display.
+INPUT:
+    CX - maximum number of characters to read
+    ES:DI - pointer to buffer (must fit CX+1 characters)
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A5h - Get string length
+Returns the length of a ASCII 0-terminated string.
+INPUT:
+    DS:SI - pointer to string
+OUTPUT:
+    BX - string length, not including terminator
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A6h - Convert 8.3-format file name to FAT12 format
+Converts a 8.3 dot file name to a fixed-size, padded, upper-case 
+FAT12-compliant file name.
+Must contain a dot.
+Must have between 1 and 8 characters before the dot.
+Must have between 1 and 3 characters after the dot.
+Example: "abcd.000" is converted to "ABCD    000"
+         "abcdefgh.aaa" is converted to "ABCDEFGHAAA"
+INPUT:
+    DS:SI - pointer to 8.3 dot file name
+    ES:DI - pointer to buffer to hold the resulting FAT12 file name
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A7h - Dump virtual display data
+Dumps the virtual display of the current task.
+Dumps the vram if the specified virtual display is the 
+active virtual display.
+The buffer must be able to store 4000 bytes (80 columns x 25 rows x 2 bytes).
+INPUT:
+    ES:DI - pointer to where the virtual display will be dumped
+            (must be able to store 4000 bytes)
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A8h - Dump characters to current task's virtual display
+Prints a specified number of characters from a string to the
+current task's virtual display.
+INPUT:
+    DS:SI - pointer to beginning of dump source
+    CX - number of characters to print
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0A9h - Validate 8.3-format file name
+Checks whether the specified 8.3 dot file name is valid:
+    Must contain one dot.
+    Must have between 1 and 8 characters before the dot.
+    Must have between 1 and 3 characters after the dot.
+Example: "abcd.000"
+         "abcdefgh.aaa"
+         "abc.a"
+INPUT:
+    DS:SI - pointer to 8.3 dot file name
+OUTPUT:
+    AX - 0 when the file name is a valid 8.3 file name
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0AAh - Get cursor position
+Gets the cursor position in the current task's virtual display.
+INPUT:
+    NONE
+OUTPUT:
+    BH - row
+    BL - column
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0ABh - Format disk
+Formats the current disk with the specified FAT12 image.
+Snowdrop OS's default FAT12 image is expected to be first read via 0B1h.
+WARNING: DESTROYS BOOT SECTOR AND ALL FILES PRESENT ON THE DISK.
+INPUT:
+    DS:SI - pointer to FAT12 image
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0ACh - Write boot loader to disk
+Writes the Snowdrop OS boot loader to the current disk.
+INPUT:
+    AX - 0=unpartitioned, 1=MBR, other value NOOP
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0ADh - Get serial port driver status
+Returns the status of the serial port driver.
+(Default settings: COM1, 9600 bits per second, 8 data bits, no parity, 
+1 stop bit, no flow control)
+INPUT:
+    NONE
+OUTPUT:
+    AL - 1 when driver is loaded, 0 otherwise
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0AEh - Serial port "read data" user interrupt
+Receives a byte whenever one is available to read from the serial port.
+User applications are meant to define their own handlers for this interrupt,
+to handle bytes available for reading from the serial port.
+(Default settings: COM1, 9600 bits per second, 8 data bits, no parity, 
+1 stop bit, no flow control)
+INPUT:
+    AL - byte read from serial port
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0AFh - Serial port send data (blocking)
+Blocks until the serial port is ready to send.
+Once that happens, it sends the specified byte.
+(Default settings: COM1, 9600 bits per second, 8 data bits, no parity, 
+1 stop bit, no flow control)
+INPUT:
+    AL - byte to send
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B0h - Install interrupt handler
+Installs the specified interrupt handler, returning a pointer to the old
+(previous) interrupt handler.
+INPUT:
+    AL - interrupt number
+    ES:DI - pointer to interrupt handler to install
+OUTPUT:
+    DX:BX - pointer to old interrupt handler
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B1h - Read FAT12 image
+Reads a complete floppy FAT12 image in preparation for a disk format 
+operation via int 0ABh.
+INPUT:
+    ES:DI - pointer to where file data will be loaded
+            (must be able to hold at least 32kb)
+            (must not cross any 64kb boundaries)
+OUTPUT:
+    AL - status (0=success, 1=not found)
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B2h - Read screen character and attribute at position
+Reads a character and attribute from the current 
+task's virtual display, from the specified location.
+INPUT:
+    BH - location row
+    BL - location column
+OUTPUT:
+    AH - attribute byte
+    AL - ASCII character byte
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B3h - Convert FAT12 format file name to 8.3-format file name
+Converts a file name in FAT12 format to a 8.3 dot file name.
+Example: "ABCD    000" is converted to "ABCD.000"
+         "ABCDEFGHAAA" is converted to "ABCDEFGH.AAA"
+         "ABC       A" is converted to "ABC.A"
+INPUT:
+    DS:SI - pointer to FAT12-compliant file name
+    ES:DI - pointer to buffer to hold the resulting 8.3 dot file name
+            (must be able to hold at least 13 characters)
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B4h - Dump stack top and register values
+Dump stack top and register values to video ram, as they were right 
+before the "int XX" call which reaches this function.
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B5h - Set current task lifetime parameters
+Sets parameters which configures the scheduler's behaviour with respect to 
+the current task.
+INPUT:
+    BL - lifetime parameters, as follows:
+        bit 0 - when set, keep memory after task exit; useful for tasks which
+                install interrupt handlers that must persist after task exit
+        bit 1-7 - unused
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B6h - Parallel port send data
+Sends the specified data byte to the parallel port's data pins
+(Default settings: LPT1)
+INPUT:
+    AL - byte to send
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B7h - Get parallel port driver status
+Returns the status of the parallel port driver.
+(Default settings: LPT1)
+INPUT:
+    NONE
+OUTPUT:
+    AL - 1 when driver is loaded, 0 otherwise
+    DX - port base address (only if driver is loaded)
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B8h - Higher-level timer interrupt (KERNEL RESERVED)
+This interrupt is invoked by the system timer whenever it ticks.
+It is reserved for kernel-level constructs that wish to be periodically 
+called. As such, it is strongly advised to not be overridden from user apps.
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0B9h - Play sound with specified properties
+Enqueue a sound to be played by Snowdrop OS's sound driver.
+INPUT:
+    AX - frequency (see int 89h documentation for example frequencies)
+    CL - length of sound in timer ticks (one tick is 10ms)
+    DX - per-tick frequency delta (used to change frequency every tick)
+    CH - sound mode, as follows:
+        0 - normal (queued sound)
+        1 - immediate (automatically becomes next to play)
+        2 - exclusive (all other sounds are removed, queue is locked
+            while this sound plays)
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0BAh - Get keyboard driver key press status
+Returns the current status (pressed or not pressed) of 
+the specified key.
+INPUT:
+    BL - scan code
+OUTPUT:
+    AL - 0 when key is not pressed, and non-zero when it is
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0BBh - Get keyboard driver mode
+Returns the current keyboard driver mode.
+INPUT:
+    NONE
+OUTPUT:
+    AX - driver mode, as follows:
+        0 - off; delegate everything to previous handler (BIOS usually)
+        1 - on; ignore previous handler
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0BCh - Set keyboard driver mode
+Changes the way the keyboard driver functions.
+INPUT:
+    AX - driver mode, as follows:
+        0 - off; delegate everything to previous handler (BIOS usually)
+        1 - on; ignore previous handler
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0BDh - Compare strings
+Compares the provided strings for length and ASCII order.
+INPUT:
+    DS:SI - pointer to first string
+    ES:DI - pointer to second string
+OUTPUT:
+    AX - 0 when the strings are equal
+         1 when the first string is lower (ASCII-wise)
+         2 when the second string is lower (ASCII-wise)
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0BEh - Convert string representation of integer to integer
+Convert 16bit unsigned integer string (decimal) to an unsigned integer.
+INPUT:
+    DS:SI - pointer to string representation of integer (zero-terminated)
+OUTPUT:
+    AX - resulting integer
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0BFh - Get task parameter (program argument) value
+Gets the value of the specified parameter, of the currently running task.
+INPUT:
+    DS:SI - pointer to the name of the parameter (zero-terminated)
+            (must be no longer than 65 bytes, including terminator)
+    ES:DI - pointer to buffer into which parameter value will be read
+            (must be at least 257 bytes long)
+OUTPUT:
+    AX - 0 when parameter was not found, another value otherwise
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0C0h - Mouse manager event callback
+Invoked by the mouse manager upon receiving a mouse event (including newly calculated position, button status, etc)
+This is meant to be overridden by consumers who wish to be called back when any mouse events are raised.
+INPUT:
+    AL - bits 3 to 7 - unused and indeterminate
+         bit 2 - middle button current state
+         bit 1 - right button current state
+         bit 0 - left button current state
+    BX - X position in user coordinates
+    DX - Y position in user coordinates
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0C1h - Clear currently-playing sounds
+Clears any playing, or about to play, sounds.
+INPUT:
+    NONE
+OUTPUT:
+    NONE
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0C2h - Get available disk information
+Returns count, active disk ID, and available disk IDs.
+INPUT:
+    NONE
+OUTPUT:
+    AL - ID of current disk
+    AH - number of disks
+    BL - ID of first disk
+    BH - ID of second disk, if one exists
+    CL - ID of third disk, if one exists
+    CH - ID of fourth disk, if one exists
+    DL - ID of fifth disk, if one exists
+    DH - ID of sixth disk, if one exists
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0C3h - Set current disk
+Makes the specified disk current.
+INPUT:
+    AL - ID of disk to be made current
+OUTPUT:
+    AX - 0 when operation succeeded
+         1 when operation failed because the specified disk does not exist
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+int 0C4h - Messaging functions
+
+Function 0: subscribe to be notified of messages of the specified type.
+INPUT:
+    AH - 0
+    DS:SI - pointer to message type string, no longer than 32 characters
+    DX:BX - pointer to consumer function; consumer contract:
+       input:
+           DS:SI - pointer to message bytes
+           ES:DI - pointer to message type
+              CX - message bytes length
+              AX - (reserved for future functionality)
+              BX - (reserved for future functionality)
+              DX - (reserved for future functionality)
+       output:
+           none
+       Consumer may not add or remove consumers.
+       Consumer must use retf to return.
+OUTPUT:
+    AX - not preserved (reserved for future functionality)
+
+Function 1: unsubscribe all consumers subscribed by the current task.
+INPUT:
+    AH - 1
+OUTPUT:
+    AX - not preserved (reserved for future functionality)
+
+Function 2: publish a message of the specified type
+INPUT:
+    AH - 2
+    DS:SI - pointer to message contents
+    ES:DI - message type
+    CX - length of message contents
+OUTPUT:
+    AX - not preserved (reserved for future functionality)
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+int 0C5h - Extra mouse manager functions
+
+Function 0: move mouse to specified location.
+INPUT:
+    AH - 0
+    DX - Y coordinate
+    BX - X coordinate
+OUTPUT:
+    AX - not preserved (reserved for future functionality)
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+int 0C6h - Extra scheduler functions
+
+Function 0: set task target on next yield.
+INPUT:
+    AH - 0
+    BX - task ID of task which will become active after on next yield
+OUTPUT:
+    AX - not preserved (reserved for future functionality)
+------------------------------------------------------------------------------

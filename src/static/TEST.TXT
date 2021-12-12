@@ -1,0 +1,7 @@
+Snowdrop OS was born of my childhood curiosity around what happens when a PC is turned on, the mysteries of bootable disks, and the hidden aspects of operating systems. It is a 16-bit real mode operating system for the IBM PC architecture. I developed this homebrew OS from scratch, using only x86 assembly language. I also wrote a few, very small apps, as well as ported one of my games to it. After all, what kind of an operating system doesn't have games?
+
+The Snowdrop OS and the apps are distributed as both a floppy disk (1.44Mb) image, as well as a CD-ROM image. The images contain the following, all programmed from scratch:
+
+- a boot loader which loads the kernel into memory
+- a kernel which sets up interrupt vectors to be used by user apps, and then loads the startup app
+- user apps, including a console (command line interface), a few simple test apps, and aSMtris, my Tetris clone

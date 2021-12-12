@@ -1,0 +1,14 @@
+Snowdrop OS - extending Snowdrop
+by Sebastian Mihai, http://sebastianmihai.com
+
+
+You are encouraged to modify and extend Snowdrop OS with your own system calls (provided by the kernel), or by creating apps for it.
+
+To extend the Snowdrop kernel:
+	- implement your service routine in a separate source file
+	- include your source file at the bottom of src\kernel\kernel.asm
+	- inspect the kernel_init_interrupts procedure in src\kernel\kernel.asm to see how each interrupt handler is registered, and register your own
+
+You can also register your service as an interrupt handler which persists after the task that installed it exits. See the KEEPINST and KEEPCALL apps (source inside src\apps) to see how to leverage the scheduler's "keep task" functionality to achieve this.
+
+To write your own Snowdrop app, read some tips in yourOwnApp.txt.
