@@ -53,7 +53,6 @@ img:
 	dd conv=notrunc if=output/SNOWDROP.LDR of=disk/snowdrop.img
 
 emulate:
-	# Maybe `sendkey` can be used for quick app loading?
 	qemu-system-i386 -fda disk/snowdrop.img
 
 addimg:
